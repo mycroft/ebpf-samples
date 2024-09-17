@@ -1,3 +1,5 @@
 /*/bpf_*.go
 /*/bpf_*.o
+/*/vmlinux.h
 /hello-world/hello-world
+/hello-map/hello-map
