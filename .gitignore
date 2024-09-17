@@ -3,4 +3,5 @@
 /*/vmlinux.h
 /hello-world/hello-world
 /hello-map/hello-map
+/hello-xdp/hello-xdp
 /.vscode
