@@ -6,6 +6,9 @@
 
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/icmp.h>
+
+#include "xdp-ringbuf.h"
 
 typedef unsigned short u16;
 typedef unsigned int u32;
@@ -55,23 +58,49 @@ int hello(struct xdp_md *ctx) {
 		return XDP_PASS;
 	}
 
+	if (ip->protocol != IPPROTO_ICMP) {
+		return XDP_PASS;
+	}
+
+	struct icmphdr *icmp = (void *)(ip + 1);
+	if ((void *)(icmp + 1) > data_end) {
+		return XDP_PASS;
+	}
+
+	if (icmp->type == ICMP_ECHO) {
+		return XDP_PASS;
+	}
+
+#define ICMP_ECHO_LEN 64
+
+	if (data + sizeof(*eth) + sizeof(*ip) + ICMP_ECHO_LEN > data_end) {
+		const char fmt[] = "blah";
+		bpf_trace_printk(fmt, sizeof(fmt));
+		return XDP_PASS;
+	}
+
+	if (bpf_ntohs(ip->tot_len) - sizeof(*ip) != ICMP_ECHO_LEN)
+		return XDP_PASS;
 
 	task_info = bpf_ringbuf_reserve(&events, sizeof(struct event), 0);
 	if (!task_info) {
 		return 0;
 	}
 
+	icmp->un.echo.sequence = bpf_get_prandom_u32() % 32;
+	icmp->checksum = 0;
+	icmp->checksum = icmp_csum(icmp, ICMP_ECHO_LEN);
+
+	ip->ttl = bpf_get_prandom_u32() % 32;
+	ip->check = iph_csum(ip);
+
 	task_info->ip_protocol = ip->protocol;
 	task_info->ip_saddr = ip->saddr;
 	task_info->ip_daddr = ip->daddr;
 
 	task_info->counter = counter ++;
-	// bpf_get_current_comm(&task_info->comm, TASK_COMM_LEN);
 
 	bpf_ringbuf_submit(task_info, 0);
-
-    // const char fmt[] = "Packet p:%x s:%x d:%x";
-    // bpf_trace_printk(fmt, sizeof(fmt), ip->protocol, ip->saddr, ip->daddr);
 
     return XDP_PASS;
 }
