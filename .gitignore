@@ -2,6 +2,7 @@
 /*/bpf_*.o
 /*/vmlinux.h
 /hello-world/hello-world
+/hello-perf/hello-perf
 /hello-map/hello-map
 /hello-xdp/hello-xdp
 /xdp-ringbuf/xdp-ringbuf
