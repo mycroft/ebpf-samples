@@ -9,7 +9,7 @@
 #include <bpf/bpf_endian.h>
 
 SEC("xdp")
-int packetdrop(struct xdp_md *ctx)
+int basic(struct xdp_md *ctx)
 {
     bpf_printk("hello xdp");
 

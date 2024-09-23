@@ -33,7 +33,7 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    bpf_program__attach_xdp(skel->progs.packetdrop, ifindex);
+    bpf_program__attach_xdp(skel->progs.basic, ifindex);
 
     FILE *trace_pipe = fopen("/sys/kernel/debug/tracing/trace_pipe", "r");
     if (trace_pipe == NULL) {
