@@ -7,3 +7,5 @@
 /hello-xdp/hello-xdp
 /xdp-ringbuf/xdp-ringbuf
 /.vscode
+/basic-c/basic_kern.o
+/basic-c/basic_user
