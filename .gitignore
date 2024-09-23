@@ -10,3 +10,4 @@
 /basic-c/basic_kern.o
 /basic-c/basic_user
 /basic-c/basic_kern.skel.h
+/hello-tailcall/hello-tailcall
