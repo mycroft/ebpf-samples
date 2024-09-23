@@ -10,33 +10,63 @@
 
 #include "events.h"
 
+int counter = 0;
+
 struct {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
     __uint(max_entries, 1 << 24);
 } events SEC(".maps");
 
+// this 1 entry map is shared between userland and kernel land to
+// pass values from userland to kerneland.
 struct {
-  __uint(type, BPF_MAP_TYPE_ARRAY); 
-  __uint(max_entries, 1);
-  __type(key, __u32);
-  __type(value, struct shared_data);
+    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, __u32);
+    __type(value, struct shared_data);
 } shared_map SEC(".maps");
 
 SEC("xdp")
 int ringbuf(struct xdp_md *ctx)
 {
     struct event *e;
-    struct shared_data *data;
+    struct shared_data *shared_data;
     __u32 key = 0;
+
+    void *data     = (void*)(long)ctx->data;
+    void *data_end = (void*)(long)ctx->data_end;
+
+    struct ethhdr *eth;
+    struct iphdr *ip;
+
+    eth = data;
+    if ((void *)(eth + 1) > data_end) {
+        return XDP_PASS;
+    }
+
+    if (eth->h_proto != bpf_htons(ETH_P_IP)) {
+        // not an IP packet
+        return XDP_PASS;
+    }
+
+    ip = (void *)(eth + 1);
+    if ((void *)(ip + 1) > data_end) {
+        return XDP_PASS;
+    }
 
     e = bpf_ringbuf_reserve(&events, sizeof(struct event), 0);
     if (!e) {
-        return 0;
+        return XDP_PASS;
     }
 
-    data = bpf_map_lookup_elem(&shared_map, &key);
-    if (data) {
-        e->shared_num = data->counter;
+    e->ip_protocol = ip->protocol;
+    e->ip_saddr = ip->saddr;
+    e->ip_daddr = ip->daddr;
+    e->counter = counter ++;
+
+    shared_data = bpf_map_lookup_elem(&shared_map, &key);
+    if (shared_data) {
+        e->shared_num = shared_data->counter;
     }
 
     bpf_ringbuf_submit(e, 0);

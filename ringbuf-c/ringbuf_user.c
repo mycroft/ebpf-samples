@@ -11,7 +11,15 @@
 static int handle_event(void *ctx, void *data, size_t data_sz)
 {
     const struct event *e = data;
-    printf("Event received %d\n", e->shared_num);
+
+    printf("Event received. shared:%d counter:%lld protocol:%d 0x%08x -> 0x%08x\n",
+        e->shared_num,
+        e->counter,
+        e->ip_protocol,
+        e->ip_saddr,
+        e->ip_daddr
+    );
+
     return 0;
 }
 
