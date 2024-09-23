@@ -35,8 +35,27 @@ int main(int argc, char **argv)
 
     bpf_program__attach_xdp(skel->progs.packetdrop, ifindex);
 
-    while (1) {
-        sleep(1);
+    FILE *trace_pipe = fopen("/sys/kernel/debug/tracing/trace_pipe", "r");
+    if (trace_pipe == NULL) {
+        fprintf(stderr, "Error opening trace_pipe");
+        goto cleanup;
+    }
+
+    while(1) {
+        char line[65535];
+
+        if (fgets(line, sizeof(line), trace_pipe) != NULL) {
+            fprintf(stdout, "%s", line);
+            continue;
+        }
+
+        if(feof(trace_pipe)) {
+            usleep(100);
+            clearerr(trace_pipe);
+        } else {
+            fprintf(stderr, "Error while reading file");
+            break;
+        }
     }
 
 cleanup:
