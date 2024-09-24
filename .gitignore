@@ -7,10 +7,10 @@
 /hello-xdp/hello-xdp
 /xdp-ringbuf/xdp-ringbuf
 /.vscode
-/basic-c/basic_kern.o
 /basic-c/basic_user
 /basic-c/basic_kern.skel.h
 /hello-tailcall/hello-tailcall
-/ringbuf-c/ringbuf_kern.o
-/ringbuf-c/ringbuf_kern.skel.h
 /ringbuf-c/ringbuf_user
+/*/*.o
+/*/*.skel.h
+/syscalls/syscalls_user
