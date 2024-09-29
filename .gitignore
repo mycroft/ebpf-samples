@@ -15,3 +15,4 @@
 /*/*.skel.h
 /syscalls/syscalls_user
 /ringbuf-c-attach/ringbuf2_user
+/hide-process/hide_process_user
